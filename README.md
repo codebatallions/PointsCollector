@@ -1,0 +1,2 @@
+# PointsCollector
+My Points collector
