@@ -8,6 +8,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.os.Bundle;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -25,6 +26,10 @@ import android.widget.Toast;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -32,6 +37,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -45,6 +51,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private GoogleMap visitracMap;
     private boolean locationPermissionGranted = false;
+    private static final float DEFAULT_ZOOM = 21;
+    private long UPDATE_INTERVAL = 5 * 1000;  /* 5 secs */
+    private long  FASTEST_INTERVAL = 2 * 1000;
+    private float DISPLACEMENT = 5;
     private FusedLocationProviderClient locationProviderClient;
     private LocationRequest locationRequest;
     private LocationCallback locationCallback;
@@ -55,12 +65,29 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-
+        locationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         getSupportActionBar().setLogo(R.drawable.ic_launcher_background);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        if(checkPermissions()){
+            startLocationUpdates();
+        }
+
+
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                for (Location location : locationResult.getLocations()) {
+                    changeCameraPosition(CameraUpdateFactory.newLatLngZoom(
+                            new LatLng(location.getLatitude(), location.getLongitude()),
+                            21));
+                }
+            };
+        };
+
     }
 
     @Override
@@ -94,13 +121,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         if(checkPermissions()) {
             visitracMap.setMyLocationEnabled(true);
-
-
             getLastLocation();
         }
         visitracMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
+                Log.d("Marker", "onMarkerClick: " + marker.getPosition().latitude +"," + marker.getPosition().longitude);
                 pointOfInterest.add(marker.getPosition());
                 return true;
             }
@@ -188,12 +214,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         visitracMap.animateCamera(update);
     }
 
-
-    private void getDeviceLocation() {
     /*
-     * Get the best and most recent location of the device, which may be null in rare
-     * cases when a location is not available.
-     */
+    private void getDeviceLocation() {
+
         try {
             if (locationPermissionGranted) {
                 Task locationResult = locationProviderClient.getLastLocation();
@@ -209,7 +232,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         } else {
                             Log.d("POI", "Current location is null. Using defaults.");
                             Log.e("POI", "Exception: %s", task.getException());
-                            visitracMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, DEFAULT_ZOOM));
+                            //visitracMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mDefaultLocation, DEFAULT_ZOOM));
                             visitracMap.getUiSettings().setMyLocationButtonEnabled(false);
                         }
                     }
@@ -218,23 +241,25 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         } catch(SecurityException e)  {
             Log.e("Exception: %s", e.getMessage());
         }
-    }
+    }*/
 
     private void showSavePreview() {
-        final ListView points = new ListView(this);
+        //final ListView points = new ListView(this);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.MATCH_PARENT);
         int i = 0;
+        final TextView detail = new TextView(this);
+        StringBuilder makeDetails = new StringBuilder();
         for(LatLng poi: pointOfInterest) {
-            TextView detail = new TextView(this);
             ++i;
-            detail.setText("("+ i + ")" + poi.longitude + " , " + poi.latitude);
-            points.addView(detail,i, lp);
+            makeDetails.append("("+ i + ")" + poi.longitude + " , " + poi.latitude);
+            makeDetails.append("\n");
         }
+        detail.setText(makeDetails.toString());
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(this)
                 .setTitle("Saved cloking Points")
-                .setView(points)
+                .setView(detail)
                 .setPositiveButton("Save",
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
@@ -278,6 +303,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onLocationChanged(Location location) {
+                // update map plus last location here
+        // update map
+        LatLng currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
+        visitracMap.addMarker(new MarkerOptions().position(currentLocation)
+                .title(location.getLatitude() + ", " + location.getLongitude()));
+        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(currentLocation, 21);
+        visitracMap.animateCamera(cameraUpdate);
 
     }
 
@@ -295,5 +327,34 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onProviderDisabled(String provider) {
 
     }
+
+    @SuppressLint("MissingPermission")
+    protected void startLocationUpdates() {
+
+        // Create the location request to start receiving updates
+        locationRequest = new LocationRequest();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(UPDATE_INTERVAL);
+        locationRequest.setFastestInterval(FASTEST_INTERVAL);
+        locationRequest.setSmallestDisplacement(DISPLACEMENT);
+
+        // Create LocationSettingsRequest object using location request
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
+        builder.addLocationRequest(locationRequest);
+        LocationSettingsRequest locationSettingsRequest = builder.build();
+
+        SettingsClient settingsClient = LocationServices.getSettingsClient(this);
+        settingsClient.checkLocationSettings(locationSettingsRequest);
+
+        locationProviderClient.requestLocationUpdates(locationRequest, new LocationCallback() {
+                    @Override
+                    public void onLocationResult(LocationResult locationResult) {
+                          onLocationChanged(locationResult.getLastLocation());
+                        //markAsVisited(locationResult.getLastLocation());
+                    }
+                },
+                Looper.myLooper());
+    }
+
 
 }
