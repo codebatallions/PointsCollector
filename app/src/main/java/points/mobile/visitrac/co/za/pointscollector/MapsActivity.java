@@ -19,7 +19,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -38,13 +37,13 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback
         ,  ActivityCompat.OnRequestPermissionsResultCallback, LocationListener {
@@ -53,13 +52,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private boolean locationPermissionGranted = false;
     private static final float DEFAULT_ZOOM = 21;
     private long UPDATE_INTERVAL = 5 * 1000;  /* 5 secs */
-    private long  FASTEST_INTERVAL = 2 * 1000;
+    private long  FASTEST_INTERVAL = 3 * 1000;
     private float DISPLACEMENT = 5;
     private FusedLocationProviderClient locationProviderClient;
     private LocationRequest locationRequest;
     private LocationCallback locationCallback;
     private Location lastKnownLocation;
-    private List<LatLng> pointOfInterest = new ArrayList<>();
+    private Set<LatLng> pointOfInterest = new HashSet<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,11 +79,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         locationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
-                for (Location location : locationResult.getLocations()) {
-                    changeCameraPosition(CameraUpdateFactory.newLatLngZoom(
-                            new LatLng(location.getLatitude(), location.getLongitude()),
-                            21));
-                }
+                onLocationChanged(locationResult.getLastLocation());
             };
         };
 
@@ -131,6 +126,16 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 return true;
             }
         });
+        visitracMap.setOnMyLocationButtonClickListener(
+                new GoogleMap.OnMyLocationButtonClickListener() {
+                    @Override
+                    public boolean onMyLocationButtonClick() {
+                        LatLng position = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
+                        Utils.showSaveDialog(MapsActivity.this, pointOfInterest, position);
+                        return true;
+                    }
+                }
+        );
     }
 
     @SuppressLint("MissingPermission")
@@ -258,7 +263,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
         detail.setText(makeDetails.toString());
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(this)
-                .setTitle("Saved cloking Points")
+                .setTitle("Saved clocking Points")
                 .setView(detail)
                 .setPositiveButton("Save",
                         new DialogInterface.OnClickListener() {
@@ -306,6 +311,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 // update map plus last location here
         // update map
         LatLng currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
+        lastKnownLocation = location;
+        visitracMap.clear();
+        visitracMap.animateCamera(CameraUpdateFactory.zoomTo(12f), 2000, null);
         visitracMap.addMarker(new MarkerOptions().position(currentLocation)
                 .title(location.getLatitude() + ", " + location.getLongitude()));
         CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(currentLocation, 21);
