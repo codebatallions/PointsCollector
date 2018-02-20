@@ -53,7 +53,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final float DEFAULT_ZOOM = 21;
     private long UPDATE_INTERVAL = 5 * 1000;  /* 5 secs */
     private long  FASTEST_INTERVAL = 3 * 1000;
-    private float DISPLACEMENT = 5;
+    private float DISPLACEMENT = 2;
     private FusedLocationProviderClient locationProviderClient;
     private LocationRequest locationRequest;
     private LocationCallback locationCallback;
@@ -298,7 +298,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         for(LatLng poi: pointOfInterest) {
 
             ++i;
-            emailMsg.append("("+ i + ")" + poi.longitude + " , " + poi.latitude);
+            emailMsg.append("("+ i + ")" + poi.latitude + " , " + poi.longitude );
             emailMsg.append("\n");
         }
 
