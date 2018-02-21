@@ -40,9 +40,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback
@@ -51,9 +49,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private GoogleMap visitracMap;
     private boolean locationPermissionGranted = false;
     private static final float DEFAULT_ZOOM = 21;
-    private long UPDATE_INTERVAL = 5 * 1000;  /* 5 secs */
-    private long  FASTEST_INTERVAL = 3 * 1000;
-    private float DISPLACEMENT = 2;
+    private long UPDATE_INTERVAL = 1;  /* 5 secs */
+    private long  FASTEST_INTERVAL = 1;
+    private float DISPLACEMENT = 1;
     private FusedLocationProviderClient locationProviderClient;
     private LocationRequest locationRequest;
     private LocationCallback locationCallback;
@@ -258,7 +256,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         StringBuilder makeDetails = new StringBuilder();
         for(LatLng poi: pointOfInterest) {
             ++i;
-            makeDetails.append("("+ i + ")" + poi.longitude + " , " + poi.latitude);
+            makeDetails.append("("+ i + ") (" + poi.latitude + "," + poi.longitude +")");
             makeDetails.append("\n");
         }
         detail.setText(makeDetails.toString());
@@ -298,7 +296,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         for(LatLng poi: pointOfInterest) {
 
             ++i;
-            emailMsg.append("("+ i + ")" + poi.latitude + " , " + poi.longitude );
+            emailMsg.append("("+ i + ") (" + poi.latitude + " , " + poi.longitude +")" );
             emailMsg.append("\n");
         }
 
