@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.os.Bundle;
@@ -34,14 +35,21 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
-import java.util.HashSet;
-import java.util.Set;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.json.Json;
+import javax.json.JsonObjectBuilder;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback
         ,  ActivityCompat.OnRequestPermissionsResultCallback, LocationListener {
@@ -56,7 +64,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private LocationRequest locationRequest;
     private LocationCallback locationCallback;
     private Location lastKnownLocation;
-    private Set<LatLng> pointOfInterest = new HashSet<>();
+    private List<LatLng> pointOfInterest = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -130,6 +138,20 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     public boolean onMyLocationButtonClick() {
                         LatLng position = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
                         Utils.showSaveDialog(MapsActivity.this, pointOfInterest, position);
+                        int size = pointOfInterest.size();
+                        if(size >1){
+                            visitracMap.addPolyline(new PolylineOptions()
+                                    .addAll(pointOfInterest)
+                                    .width(5)
+                                    .color(Color.GREEN));
+                        }
+                        if(size >0) {
+                            for (LatLng point : pointOfInterest) {
+                                visitracMap.addMarker(new MarkerOptions().position(point)
+                                        .title("Point " + (size - 1))
+                                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
+                            }
+                        }
                         return true;
                     }
                 }
@@ -312,9 +334,11 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         lastKnownLocation = location;
         visitracMap.clear();
         visitracMap.animateCamera(CameraUpdateFactory.zoomTo(12f), 2000, null);
-        visitracMap.addMarker(new MarkerOptions().position(currentLocation)
-                .title(location.getLatitude() + ", " + location.getLongitude()));
+//        visitracMap.addMarker(new MarkerOptions().position(currentLocation)
+//                .title(location.getLatitude() + ", " + location.getLongitude()));
         CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(currentLocation, 21);
+
+
         visitracMap.animateCamera(cameraUpdate);
 
     }
@@ -362,5 +386,17 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 Looper.myLooper());
     }
 
+    private String pathAsJson() {
+        JsonObjectBuilder builder = Json.createObjectBuilder();
+        int index = 0;
+        for (LatLng point : pointOfInterest) {
+            index++;
+            builder.add("code", index);
+            builder.add("location", Json.createObjectBuilder().add("latitude", point.latitude)
+                    .add("longitude", point.longitude));
+
+        }
+        return builder.build().toString();
+    }
 
 }
