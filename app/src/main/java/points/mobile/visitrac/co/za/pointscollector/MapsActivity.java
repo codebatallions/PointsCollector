@@ -2,6 +2,7 @@ package points.mobile.visitrac.co.za.pointscollector;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -43,8 +44,7 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
-import org.json.JSONObject;
-
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -282,23 +282,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             makeDetails.append("\n");
         }
         detail.setText(makeDetails.toString());
-        AlertDialog.Builder alertDialog = new AlertDialog.Builder(this)
+        final AlertDialog.Builder alertDialog = new AlertDialog.Builder(this)
                 .setTitle("Saved clocking Points")
                 .setView(detail)
                 .setPositiveButton("Save",
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
-                                Intent mailIntent = new Intent(Intent.ACTION_SEND);
-                                mailIntent.setType("message/rfc822");
-                                mailIntent.putExtra(Intent.EXTRA_EMAIL  , new String[]{"obakeng.balatseng@gmail.com, sefako@gmail.com"});
-                                mailIntent.putExtra(Intent.EXTRA_SUBJECT, "Point of Interest");
-                                mailIntent.putExtra(Intent.EXTRA_TEXT   , emailDetails());
-                                try {
-                                    startActivity(Intent.createChooser(mailIntent, "Send mail..."));
-                                } catch (android.content.ActivityNotFoundException ex) {
-                                    Toast.makeText(MapsActivity.this, "There are no email clients installed.", Toast.LENGTH_SHORT).show();
-                                }
-                                dialog.dismiss();
+                                UploadPatrolPoints uploadPatrolPoints =new UploadPatrolPoints(new WeakReference<Context>(MapsActivity.this), dialog);
+                                uploadPatrolPoints.execute(pathAsJson());
+
                             }
                         })
                 .setNegativeButton("Cancel",
