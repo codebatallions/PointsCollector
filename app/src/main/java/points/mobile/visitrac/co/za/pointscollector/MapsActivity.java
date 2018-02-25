@@ -384,8 +384,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             for (LatLng point : pointOfInterest) {
                 JSONObject pathPoint = new JSONObject();
                 index++;
-                pathPoint.put("latitude", point.latitude);
-                pathPoint.put("longitude", point.longitude);
+                pathPoint.put("latitude", point.latitude+"");
+                pathPoint.put("longitude", point.longitude+"");
                 pathPoint.put("pointnumber", index);
                 patrolPathJson.put(pathPoint);
             }
