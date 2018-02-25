@@ -4,7 +4,6 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
@@ -22,7 +21,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -44,12 +42,12 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.json.Json;
-import javax.json.JsonObjectBuilder;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback
         ,  ActivityCompat.OnRequestPermissionsResultCallback, LocationListener {
@@ -379,16 +377,24 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private String pathAsJson() {
-        JsonObjectBuilder builder = Json.createObjectBuilder();
-        int index = 0;
-        for (LatLng point : pointOfInterest) {
-            index++;
-            builder.add("code", index);
-            builder.add("location", Json.createObjectBuilder().add("latitude", point.latitude)
-                    .add("longitude", point.longitude));
-
+        JSONObject clockingpoints = new JSONObject();
+        JSONArray patrolPathJson = new JSONArray();
+        try {
+            int index = 0;
+            for (LatLng point : pointOfInterest) {
+                JSONObject pathPoint = new JSONObject();
+                index++;
+                pathPoint.put("latitude", point.latitude);
+                pathPoint.put("longitude", point.longitude);
+                pathPoint.put("pointnumber", index);
+                patrolPathJson.put(pathPoint);
+            }
+            clockingpoints.put("clockingpoints", patrolPathJson);
+        }catch (Exception e){
+            e.printStackTrace();
         }
-        return builder.build().toString();
+
+        return clockingpoints.toString();
     }
 
 }

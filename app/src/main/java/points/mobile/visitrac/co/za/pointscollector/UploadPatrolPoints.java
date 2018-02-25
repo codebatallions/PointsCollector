@@ -24,17 +24,19 @@ import okhttp3.logging.HttpLoggingInterceptor;
 
 /**
  * Created by sefako@gmail.com on 2018/02/24.
+ *   visitrac/rest/ClockingService/registerClockingPoints (POST)
  */
 
 public class UploadPatrolPoints extends AsyncTask<String, Void, String> {
+
+    private DialogInterface dialog;
     public static final String TAG = "UploadPatrolsPoints";
-    public static final String SERVER_URL = "visitrac.dedicated.co.za";
+    public static final String SERVER_URL = "visitrac.dedicated.co.za:8080";
     private WeakReference<Context> context;
     public static final MediaType JSON
             = MediaType.parse("application/json; charset=utf-8");
     private static final String EMEI = "device-emei";
-    public static String POST_PATROL_POINTS = "/visitrac/rest/???/??";
-    private DialogInterface dialog;
+    public static String POST_PATROL_POINTS = "/visitrac/rest/ClockingService/registerClockingPoints";
 
     public UploadPatrolPoints(WeakReference<Context> context, DialogInterface dialog) {
         this.context = context;
@@ -48,14 +50,13 @@ public class UploadPatrolPoints extends AsyncTask<String, Void, String> {
         interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
         RequestBody body = RequestBody.create(JSON, params[0]);
         Log.i(TAG, " Created RS body " + body );
-        Log.i(TAG, " emei " + getDevideId(context.get()) );
-
+        try {
         Request request = new Request.Builder()
                 .header(EMEI,  getDevideId(context.get()))
                 .url(endPoint())
                 .post(body)
                 .build();
-        try {
+
 
             Log.i(TAG, " About to Call Rest Service  " + request.body().toString() + " header " + request.headers());
             Response response = client.newCall(request).execute();
@@ -82,7 +83,7 @@ public class UploadPatrolPoints extends AsyncTask<String, Void, String> {
     }
 
     @SuppressLint("HardwareIds")
-    public  String getDevideId(Context context) {
+    public  String getDevideId(Context context) throws Exception{
         TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
 
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE)
@@ -93,12 +94,12 @@ public class UploadPatrolPoints extends AsyncTask<String, Void, String> {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 return telephonyManager.getImei();
             } else {
-                return telephonyManager.getDeviceId();
+                 return telephonyManager.getDeviceId();
             }
         }
     }
 
     public String endPoint(){
-        return "http" + SERVER_URL+POST_PATROL_POINTS;
+        return "http://" + SERVER_URL+POST_PATROL_POINTS;
     }
 }
