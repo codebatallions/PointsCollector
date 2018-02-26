@@ -6,7 +6,7 @@ import android.support.v7.app.AlertDialog;
 
 import com.google.android.gms.maps.model.LatLng;
 
-import java.util.List;
+import java.util.Set;
 
 /**
  * Created by sefako@gmail.com on 2018/02/16.
@@ -14,7 +14,7 @@ import java.util.List;
 
 public class Utils {
 
-    public static void showSaveDialog(Context context, final List<LatLng> positions, final LatLng position) {
+    public static void showSaveDialog(Context context, final Set<LatLng> positions, final LatLng position) {
         AlertDialog.Builder builder1 = new AlertDialog.Builder(context);
         builder1.setMessage("Save Location. ["+position.latitude+","+ position.longitude +"]");
         builder1.setCancelable(true);

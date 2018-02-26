@@ -46,8 +46,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback
         ,  ActivityCompat.OnRequestPermissionsResultCallback, LocationListener {
@@ -62,7 +62,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private LocationRequest locationRequest;
     private LocationCallback locationCallback;
     private Location lastKnownLocation;
-    private List<LatLng> pointOfInterest = new ArrayList<>();
+    private Set<LatLng> pointOfInterest = new LinkedHashSet<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
