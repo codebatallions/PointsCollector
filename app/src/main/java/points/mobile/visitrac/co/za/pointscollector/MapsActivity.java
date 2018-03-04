@@ -21,6 +21,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -56,8 +57,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private boolean locationPermissionGranted = false;
     private static final float DEFAULT_ZOOM = 21;
     private long UPDATE_INTERVAL = 1;  /* 5 secs */
-    private long  FASTEST_INTERVAL = 1;
-    private float DISPLACEMENT = 1;
+    private long  FASTEST_INTERVAL = 0;
+    private float DISPLACEMENT = 0.5f;
     private FusedLocationProviderClient locationProviderClient;
     private LocationRequest locationRequest;
     private LocationCallback locationCallback;
@@ -328,6 +329,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 //                .title(location.getLatitude() + ", " + location.getLongitude()));
         CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(currentLocation, 21);
 
+        if(location.getAccuracy() > 15){
+            Toast.makeText(MapsActivity.this, "GPS accuracy too low!, \nplease wait 30 seconds & try again", Toast.LENGTH_LONG).show();
+        }
 
         visitracMap.animateCamera(cameraUpdate);
 
