@@ -2,6 +2,7 @@ package points.mobile.visitrac.co.za.pointscollector;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
@@ -21,7 +22,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -56,15 +56,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private GoogleMap visitracMap;
     private boolean locationPermissionGranted = false;
     private static final float DEFAULT_ZOOM = 21;
-    private long UPDATE_INTERVAL = 1;  /* 5 secs */
-    private long  FASTEST_INTERVAL = 0;
-    private float DISPLACEMENT = 0.5f;
+    private long UPDATE_INTERVAL = 5;  /* 5 secs */
+    private long  FASTEST_INTERVAL = 1;
+    private float DISPLACEMENT = 1.5f;
     private FusedLocationProviderClient locationProviderClient;
     private LocationRequest locationRequest;
     private LocationCallback locationCallback;
     private Location lastKnownLocation;
     private Set<LatLng> pointOfInterest = new LinkedHashSet<>();
-
+    private ProgressDialog progressBar = null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -75,19 +75,19 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
+        showProgressDialog();
         if(checkPermissions()){
             startLocationUpdates();
         }
 
+    }
 
-        locationCallback = new LocationCallback() {
-            @Override
-            public void onLocationResult(LocationResult locationResult) {
-                onLocationChanged(locationResult.getLastLocation());
-            };
-        };
-
+    private void  showProgressDialog(){
+        progressBar = new ProgressDialog(MapsActivity.this);
+        progressBar.setTitle("GPS searching...");
+        progressBar.setMessage("Please wait while we locate satelite ...");
+        progressBar.setCancelable(false);
+        progressBar.show();
     }
 
     @Override
@@ -329,12 +329,20 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 //                .title(location.getLatitude() + ", " + location.getLongitude()));
         CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(currentLocation, 21);
 
-        if(location.getAccuracy() > 15){
-            Toast.makeText(MapsActivity.this, "GPS accuracy too low!, \nplease wait 30 seconds & try again", Toast.LENGTH_LONG).show();
+        if(progressBar != null && progressBar.isShowing()){
+            if(gpsAccuracyAcceptable(location)){
+                progressBar.dismiss();
+            }
         }
-
         visitracMap.animateCamera(cameraUpdate);
 
+    }
+
+    private boolean gpsAccuracyAcceptable(Location location){
+        if(location != null && location.getAccuracy() > 0.0f && location.getAccuracy() <=30f){
+            return true;
+        }
+        return false;
     }
 
     @Override

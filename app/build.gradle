@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 27
-    buildToolsVersion "27.0.3"
+    buildToolsVersion "27.0.2"
     defaultConfig {
         applicationId "points.mobile.visitrac.co.za.pointscollector"
         minSdkVersion 23
@@ -24,10 +24,9 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.google.android.gms:play-services:11.8.0'
     implementation 'com.google.android.gms:play-services-vision:11.8.0'
-    //compile 'javax.json:javax.json-api:1.1.2'
     implementation 'com.squareup.okhttp3:okhttp:3.9.0'
     implementation 'com.squareup.okhttp3:logging-interceptor:3.9.0'
     implementation 'org.apache.commons:commons-lang3:3.5'
